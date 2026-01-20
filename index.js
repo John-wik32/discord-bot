@@ -1,23 +1,31 @@
 const { Client, GatewayIntentBits, Partials, AttachmentBuilder } = require('discord.js');
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
+const path = require('path'); // Make sure this is here
 const cors = require('cors');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
 // --- CONFIG ---
-const PORT = process.env.PORT || 8000; // Koyeb uses this
+const PORT = process.env.PORT || 8000;
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// --- DISCORD BOT SETUP ---
-const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
-    partials: [Partials.Channel]
+// --- EXPRESS DASHBOARD SETUP ---
+app.use(cors());
+app.use(express.json());
+
+// 1. Tell Express WHERE the public folder is exactly
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
+
+// 2. FORCE the main link to open index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
 });
 
+// ... rest of your bot code (client.login, etc.) stays the same ...
 client.once('ready', () => console.log(`Logged in as ${client.user.tag}`));
 client.login(DISCORD_TOKEN);
 
@@ -75,4 +83,5 @@ app.post('/api/post', checkAuth, upload.single('mediaFile'), async (req, res) =>
 // Start Server
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Dashboard running on port ${PORT}`);
+
 });
